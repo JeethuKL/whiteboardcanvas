@@ -7,6 +7,7 @@ import EmbeddedLink from './EmbeddedLink';
 import ConnectionLine from './ConnectionLine';
 import Toolbar from './Toolbar';
 import JsonEditor from './JsonEditor';
+import { useMCPConnection, MCPStatusIndicator } from '../hooks/useMCPConnection';
 
 const initialData: WhiteboardData = {
   elements: [
@@ -72,21 +73,32 @@ export default function Whiteboard() {
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // MCP Connection
+  const mcpConnection = useMCPConnection();
+
+  // Send whiteboard data to MCP server whenever it changes
+  useEffect(() => {
+    if (mcpConnection.isConnected) {
+      mcpConnection.sendWhiteboardData(data);
+    }
+  }, [data, mcpConnection]);
+
   const updateElement = (id: string, updates: Partial<WhiteboardElement>) => {
     setData(prev => ({
       ...prev,
       elements: prev.elements.map(el => 
-        el.id === id ? { ...el, ...updates } : el
+        el.id === id ? { ...el, ...updates } as WhiteboardElement : el
       )
     }));
   };
 
   const addElement = (type: string) => {
+    const elementType = type.startsWith('flow-') ? 'flow-node' : type;
     const newElement: WhiteboardElement = {
       id: `${type}-${Date.now()}`,
       x: Math.random() * 400 + 100,
       y: Math.random() * 300 + 100,
-      type: type.startsWith('flow-') ? 'flow-node' : type,
+      type: elementType as 'sticky' | 'flow-node' | 'mermaid' | 'embed',
       ...(type === 'sticky' ? { text: 'New note', color: 'yellow' } : {}),
       ...(type.startsWith('flow-') ? {
         label: 'New Node',
@@ -95,7 +107,7 @@ export default function Whiteboard() {
       } : {}),
       ...(type === 'mermaid' ? { mermaidCode: 'graph TD\n    A --> B' } : {}),
       ...(type === 'embed' ? { url: '', embedType: 'iframe' as const } : {})
-    };
+    } as WhiteboardElement;
 
     setData(prev => ({
       ...prev,
@@ -221,6 +233,7 @@ export default function Whiteboard() {
 
   return (
     <div className="h-screen w-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+      <MCPStatusIndicator connection={mcpConnection} />
       <Toolbar onAddElement={addElement} />
       
       <div
