@@ -23,3 +23,16 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Python/FastAPI backend
+venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+*.env
+backend/logs/
+backend/*.log
+# End Python/FastAPI ignores

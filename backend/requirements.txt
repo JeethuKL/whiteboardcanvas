@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+pydantic
+google-cloud-speech
+google-cloud-texttospeech
+websockets
+# google-adk (if available as pip package, else use as per Google ADK docs)
